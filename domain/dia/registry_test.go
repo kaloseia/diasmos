@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/kaloseia/diasmos/domain/dia"
+	"github.com/kaloseia/diasmos/domain/dia/yaml"
 	"github.com/kaloseia/diasmos/domain/testutils"
 )
 
@@ -163,4 +164,35 @@ func (suite *RegistryTestSuite) TestLoadModelsFromDirectory() {
 	modelRelated20, relatedExists20 := model2.Related["Company"]
 	suite.True(relatedExists20)
 	suite.Equal(modelRelated20.Type, "ForOne")
+}
+
+func (suite *RegistryTestSuite) TestLoadModelsFromDirectory_InvalidDirPath() {
+	registry := dia.GetRegistry()
+
+	modelsErr := registry.LoadModelsFromDirectory("####INVALID/DIR/PATH####")
+
+	suite.NotNil(modelsErr)
+	modelsErrMsg := modelsErr.Error()
+	suite.Contains(modelsErrMsg, "error reading directory")
+	suite.Contains(modelsErrMsg, "####INVALID/DIR/PATH####")
+	suite.Len(registry.Models, 0)
+	suite.Len(registry.Entities, 0)
+}
+
+func (suite *RegistryTestSuite) TestLoadModelsFromDirectory_ConflictingName() {
+	registry := dia.GetRegistry()
+
+	registry.Models["Company"] = yaml.Model{Name: "Company"}
+
+	modelsErr := registry.LoadModelsFromDirectory(suite.ModelsDirPath)
+
+	suite.NotNil(modelsErr)
+	modelsErrMsg := modelsErr.Error()
+	suite.Contains(modelsErrMsg, "model name 'Company' already exists in registry")
+
+	conflictPath := filepath.Join(suite.ModelsDirPath, "company.mod")
+	suite.Contains(modelsErrMsg, conflictPath)
+
+	suite.Len(registry.Models, 2)
+	suite.Len(registry.Entities, 0)
 }

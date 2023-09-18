@@ -38,7 +38,7 @@ func (registry *Registry) LoadModelsFromDirectory(dirPath string) error {
 			continue
 		}
 
-		filePath := fmt.Sprintf("%s/%s", dirPath, fileName)
+		filePath := filepath.Join(dirPath, fileName)
 		fileContents, readFileErr := os.ReadFile(filePath)
 		if readFileErr != nil {
 			return fmt.Errorf("error reading file contents '%s': %w", filePath, readFileErr)

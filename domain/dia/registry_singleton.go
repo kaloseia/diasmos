@@ -11,6 +11,9 @@ var once sync.Once
 
 // GetRegistry is used to get or lazy init the singleton's Registry instance.
 func GetRegistry() *Registry {
+	if registry != nil {
+		return registry
+	}
 	once.Do(func() {
 		registry = &Registry{
 			Models:   make(map[string]yaml.Model),
@@ -23,4 +26,5 @@ func GetRegistry() *Registry {
 // ResetRegistry is used to reset the registry for testing purposes.
 func ResetRegistry() {
 	registry = nil
+	once = sync.Once{}
 }

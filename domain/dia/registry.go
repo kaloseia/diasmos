@@ -38,25 +38,41 @@ func (registry *Registry) LoadModelsFromDirectory(dirPath string) error {
 			continue
 		}
 
-		filePath := filepath.Join(dirPath, fileName)
-		fileContents, readFileErr := os.ReadFile(filePath)
-		if readFileErr != nil {
-			return fmt.Errorf("error reading file contents '%s': %w", filePath, readFileErr)
+		filePathAbs := filepath.Join(dirPath, fileName)
+		fileLoadErr := registry.loadModelFromFile(filePathAbs)
+		if fileLoadErr != nil {
+			return fileLoadErr
 		}
-
-		var modelDefinition yaml.Model
-		unmarshalErr := yaml3.Unmarshal(fileContents, &modelDefinition)
-		if unmarshalErr != nil {
-			return fmt.Errorf("error unmarshalling yaml file contents '%s': %w", filePath, unmarshalErr)
-		}
-
-		_, nameConflict := registry.Models[modelDefinition.Name]
-		if nameConflict {
-			return fmt.Errorf("model name '%s' already exists in registry (conflict: %s)", modelDefinition.Name, filePath)
-		}
-
-		registry.Models[modelDefinition.Name] = modelDefinition
-
 	}
+	return nil
+}
+
+func (registry *Registry) loadModelFromFile(filePathAbs string) error {
+	var modelDefinition yaml.Model
+	unmarshalErr := unmarshalYAMLFile(&modelDefinition, filePathAbs)
+	if unmarshalErr != nil {
+		return unmarshalErr
+	}
+
+	_, nameConflict := registry.Models[modelDefinition.Name]
+	if nameConflict {
+		return fmt.Errorf("model name '%s' already exists in registry (conflict: %s)", modelDefinition.Name, filePathAbs)
+	}
+
+	registry.Models[modelDefinition.Name] = modelDefinition
+	return nil
+}
+
+func unmarshalYAMLFile[TTarget any](target *TTarget, filePathAbs string) error {
+	fileContents, readFileErr := os.ReadFile(filePathAbs)
+	if readFileErr != nil {
+		return fmt.Errorf("error reading file contents '%s': %w", filePathAbs, readFileErr)
+	}
+
+	unmarshalErr := yaml3.Unmarshal(fileContents, target)
+	if unmarshalErr != nil {
+		return fmt.Errorf("error unmarshalling yaml file contents '%s': %w", filePathAbs, unmarshalErr)
+	}
+
 	return nil
 }

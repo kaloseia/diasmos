@@ -2,12 +2,9 @@ package dia
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
-
-	yaml3 "gopkg.in/yaml.v3"
 
 	"github.com/kaloseia/diasmos/domain/dia/yaml"
+	"github.com/kaloseia/diasmos/domain/yamlfile"
 )
 
 const ModelFileSuffix = ".mod"
@@ -19,60 +16,53 @@ type Registry struct {
 }
 
 func (registry *Registry) LoadModelsFromDirectory(dirPath string) error {
-	if registry.Models == nil {
-		registry.Models = make(map[string]yaml.Model)
-	}
-
-	dirEntries, readErr := os.ReadDir(dirPath)
-	if readErr != nil {
-		return fmt.Errorf("error reading directory '%s': %w", dirPath, readErr)
-	}
-
-	for _, dirEntry := range dirEntries {
-		if dirEntry.IsDir() {
-			continue
-		}
-
-		fileName := dirEntry.Name()
-		if filepath.Ext(fileName) != ModelFileSuffix {
-			continue
-		}
-
-		filePathAbs := filepath.Join(dirPath, fileName)
-		fileLoadErr := registry.loadModelFromFile(filePathAbs)
-		if fileLoadErr != nil {
-			return fileLoadErr
-		}
-	}
-	return nil
-}
-
-func (registry *Registry) loadModelFromFile(filePathAbs string) error {
-	var modelDefinition yaml.Model
-	unmarshalErr := unmarshalYAMLFile(&modelDefinition, filePathAbs)
+	allModels, unmarshalErr := yamlfile.UnmarshalAllYAMLFiles[yaml.Model](dirPath, ModelFileSuffix)
 	if unmarshalErr != nil {
 		return unmarshalErr
 	}
 
-	_, nameConflict := registry.Models[modelDefinition.Name]
-	if nameConflict {
-		return fmt.Errorf("model name '%s' already exists in registry (conflict: %s)", modelDefinition.Name, filePathAbs)
+	loadErr := registry.loadModelDefinitions(allModels)
+	return loadErr
+}
+
+func (registry *Registry) LoadEntitiesFromDirectory(dirPath string) error {
+	allEntities, unmarshalErr := yamlfile.UnmarshalAllYAMLFiles[yaml.Entity](dirPath, EntityFileSuffix)
+	if unmarshalErr != nil {
+		return unmarshalErr
 	}
 
-	registry.Models[modelDefinition.Name] = modelDefinition
+	loadErr := registry.loadEntityDefinitions(allEntities)
+	return loadErr
+}
+
+func (registry *Registry) loadModelDefinitions(allModels map[string]yaml.Model) error {
+	if registry.Models == nil {
+		registry.Models = make(map[string]yaml.Model)
+	}
+
+	for modelPathAbs, model := range allModels {
+		_, nameConflict := registry.Models[model.Name]
+		if nameConflict {
+			return fmt.Errorf("model name '%s' already exists in registry (conflict: %s)", model.Name, modelPathAbs)
+		}
+
+		registry.Models[model.Name] = model
+	}
 	return nil
 }
 
-func unmarshalYAMLFile[TTarget any](target *TTarget, filePathAbs string) error {
-	fileContents, readFileErr := os.ReadFile(filePathAbs)
-	if readFileErr != nil {
-		return fmt.Errorf("error reading file contents '%s': %w", filePathAbs, readFileErr)
+func (registry *Registry) loadEntityDefinitions(allEntities map[string]yaml.Entity) error {
+	if registry.Entities == nil {
+		registry.Entities = make(map[string]yaml.Entity)
 	}
 
-	unmarshalErr := yaml3.Unmarshal(fileContents, target)
-	if unmarshalErr != nil {
-		return fmt.Errorf("error unmarshalling yaml file contents '%s': %w", filePathAbs, unmarshalErr)
-	}
+	for entityPathAbs, entity := range allEntities {
+		_, nameConflict := registry.Entities[entity.Name]
+		if nameConflict {
+			return fmt.Errorf("entity name '%s' already exists in registry (conflict: %s)", entity.Name, entityPathAbs)
+		}
 
+		registry.Entities[entity.Name] = entity
+	}
 	return nil
 }

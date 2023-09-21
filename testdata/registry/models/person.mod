@@ -1,4 +1,4 @@
-name: Company
+name: Person
 fields:
   UUID:
     type: UUID
@@ -9,15 +9,18 @@ fields:
     type: AutoIncrement
     attributes:
       - mandatory
-  FoundedAt:
-    type: Time
-  Name:
+  FirstName:
+    type: String
+  LastName:
     type: String
 identifiers:
   primary: ID
   entity: UUID
+  name:
+    - FirstName
+    - LastName
 related:
-  Address:
+  Company:
+    type: ForOne
+  ContactInfo:
     type: HasOne
-  Person:
-    type: HasMany

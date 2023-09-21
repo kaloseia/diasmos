@@ -13,5 +13,5 @@ fields:
 identifiers:
   primary: ID
 related:
-  Company:
+  Person:
     type: ForOne

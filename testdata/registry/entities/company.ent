@@ -2,17 +2,19 @@ name: Company
 fields:
   UUID:
     type: Company.UUID
+    attributes:
+      - immutable
+      - mandatory
   ID:
     type: Company.ID
   FoundedAt:
     type: Company.FoundedAt
   Name:
     type: Company.Name
-  Street:
-    type: Company.Address.Street
-  HouseNumber:
-    type: Company.Address.HouseNumber
-  Email:
-    type: Company.ContactInfo.Email
-  PhoneNumber:
-    type: Company.ContactInfo.PhoneNumber
+  ZipCode:
+    type: Company.Address.ZipCode
+  City:
+    type: Company.Address.City
+related:
+  Person:
+    type: HasMany

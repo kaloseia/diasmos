@@ -42,7 +42,7 @@ func (suite *RegistryTestSuite) TestLoadModelsFromDirectory() {
 	modelsErr := registry.LoadModelsFromDirectory(suite.ModelsDirPath)
 
 	suite.Nil(modelsErr)
-	suite.Len(registry.Models, 3)
+	suite.Len(registry.Models, 4)
 	suite.Len(registry.Entities, 0)
 
 	model0, modelExists0 := registry.Models["Company"]
@@ -78,11 +78,11 @@ func (suite *RegistryTestSuite) TestLoadModelsFromDirectory() {
 
 	modelIDs00, idsExist00 := model0.Identifiers["primary"]
 	suite.True(idsExist00)
-	suite.ElementsMatch(modelIDs00.Fields, []string{"UUID"})
+	suite.ElementsMatch(modelIDs00.Fields, []string{"ID"})
 
-	modelIDs01, idsExist01 := model0.Identifiers["record"]
+	modelIDs01, idsExist01 := model0.Identifiers["entity"]
 	suite.True(idsExist01)
-	suite.ElementsMatch(modelIDs01.Fields, []string{"ID"})
+	suite.ElementsMatch(modelIDs01.Fields, []string{"UUID"})
 
 	suite.Len(model0.Related, 2)
 
@@ -90,9 +90,9 @@ func (suite *RegistryTestSuite) TestLoadModelsFromDirectory() {
 	suite.True(relatedExists00)
 	suite.Equal(modelRelated00.Type, "HasOne")
 
-	modelRelated01, relatedExists01 := model0.Related["ContactInfo"]
+	modelRelated01, relatedExists01 := model0.Related["Person"]
 	suite.True(relatedExists01)
-	suite.Equal(modelRelated01.Type, "HasOne")
+	suite.Equal(modelRelated01.Type, "HasMany")
 
 	model1, modelExists1 := registry.Models["Address"]
 	suite.True(modelExists1)
@@ -161,9 +161,61 @@ func (suite *RegistryTestSuite) TestLoadModelsFromDirectory() {
 
 	suite.Len(model2.Related, 1)
 
-	modelRelated20, relatedExists20 := model2.Related["Company"]
+	modelRelated20, relatedExists20 := model2.Related["Person"]
 	suite.True(relatedExists20)
 	suite.Equal(modelRelated20.Type, "ForOne")
+
+	model3, modelExists3 := registry.Models["Person"]
+	suite.True(modelExists3)
+	suite.Equal(model3.Name, "Person")
+
+	suite.Len(model3.Fields, 4)
+
+	modelField30, fieldExists30 := model3.Fields["UUID"]
+	suite.True(fieldExists30)
+	suite.Equal(modelField30.Type, "UUID")
+	suite.Len(modelField30.Attributes, 2)
+	suite.Equal(modelField30.Attributes[0], "immutable")
+	suite.Equal(modelField30.Attributes[1], "mandatory")
+
+	modelField31, fieldExists31 := model3.Fields["ID"]
+	suite.True(fieldExists31)
+	suite.Equal(modelField31.Type, "AutoIncrement")
+	suite.Len(modelField31.Attributes, 1)
+	suite.Equal(modelField31.Attributes[0], "mandatory")
+
+	modelField32, fieldExists32 := model3.Fields["FirstName"]
+	suite.True(fieldExists32)
+	suite.Equal(modelField32.Type, "String")
+	suite.Len(modelField32.Attributes, 0)
+
+	modelField33, fieldExists33 := model3.Fields["LastName"]
+	suite.True(fieldExists33)
+	suite.Equal(modelField33.Type, "String")
+	suite.Len(modelField33.Attributes, 0)
+
+	suite.Len(model3.Identifiers, 3)
+	modelIDs30, idsExist10 := model3.Identifiers["primary"]
+	suite.True(idsExist10)
+	suite.ElementsMatch(modelIDs30.Fields, []string{"ID"})
+
+	modelIDs31, idsExist11 := model3.Identifiers["entity"]
+	suite.True(idsExist11)
+	suite.ElementsMatch(modelIDs31.Fields, []string{"UUID"})
+
+	modelIDs32, idsExist12 := model3.Identifiers["name"]
+	suite.True(idsExist12)
+	suite.ElementsMatch(modelIDs32.Fields, []string{"FirstName", "LastName"})
+
+	suite.Len(model3.Related, 2)
+
+	modelRelated30, relatedExists30 := model3.Related["Company"]
+	suite.True(relatedExists30)
+	suite.Equal(modelRelated30.Type, "ForOne")
+
+	modelRelated31, relatedExists31 := model3.Related["ContactInfo"]
+	suite.True(relatedExists31)
+	suite.Equal(modelRelated31.Type, "HasOne")
 }
 
 func (suite *RegistryTestSuite) TestLoadModelsFromDirectory_InvalidDirPath() {
@@ -195,4 +247,128 @@ func (suite *RegistryTestSuite) TestLoadModelsFromDirectory_ConflictingName() {
 
 	suite.Len(registry.Models, 2)
 	suite.Len(registry.Entities, 0)
+}
+
+func (suite *RegistryTestSuite) TestLoadEntitiesFromDirectory() {
+	registry := dia.GetRegistry()
+
+	entitiesErr := registry.LoadEntitiesFromDirectory(suite.EntitiesDirPath)
+
+	suite.Nil(entitiesErr)
+	suite.Len(registry.Models, 0)
+	suite.Len(registry.Entities, 2)
+
+	entity0, entityExists0 := registry.Entities["Company"]
+	suite.True(entityExists0)
+	suite.Equal(entity0.Name, "Company")
+
+	suite.Len(entity0.Fields, 6)
+
+	entityField00, fieldExists00 := entity0.Fields["UUID"]
+	suite.True(fieldExists00)
+	suite.Equal(entityField00.Type, "Company.UUID")
+	suite.Len(entityField00.Attributes, 2)
+	suite.Equal(entityField00.Attributes[0], "immutable")
+	suite.Equal(entityField00.Attributes[1], "mandatory")
+
+	entityField01, fieldExists01 := entity0.Fields["ID"]
+	suite.True(fieldExists01)
+	suite.Equal(entityField01.Type, "Company.ID")
+	suite.Len(entityField01.Attributes, 0)
+
+	entityField02, fieldExists02 := entity0.Fields["FoundedAt"]
+	suite.True(fieldExists02)
+	suite.Equal(entityField02.Type, "Company.FoundedAt")
+	suite.Len(entityField02.Attributes, 0)
+
+	entityField03, fieldExists03 := entity0.Fields["Name"]
+	suite.True(fieldExists03)
+	suite.Equal(entityField03.Type, "Company.Name")
+	suite.Len(entityField03.Attributes, 0)
+
+	entityField04, fieldExists04 := entity0.Fields["ZipCode"]
+	suite.True(fieldExists04)
+	suite.Equal(entityField04.Type, "Company.Address.ZipCode")
+	suite.Len(entityField04.Attributes, 0)
+
+	entityField05, fieldExists05 := entity0.Fields["City"]
+	suite.True(fieldExists05)
+	suite.Equal(entityField05.Type, "Company.Address.City")
+	suite.Len(entityField05.Attributes, 0)
+
+	suite.Len(entity0.Related, 1)
+
+	entityRelated00, relatedExists00 := entity0.Related["Person"]
+	suite.True(relatedExists00)
+	suite.Equal(entityRelated00.Type, "HasMany")
+
+	entity1, entityExists1 := registry.Entities["Person"]
+	suite.True(entityExists1)
+	suite.Equal(entity1.Name, "Person")
+
+	suite.Len(entity1.Fields, 5)
+
+	entityField10, fieldExists10 := entity1.Fields["UUID"]
+	suite.True(fieldExists10)
+	suite.Equal(entityField10.Type, "Person.UUID")
+	suite.Len(entityField10.Attributes, 2)
+	suite.Equal(entityField10.Attributes[0], "immutable")
+	suite.Equal(entityField10.Attributes[1], "mandatory")
+
+	entityField11, fieldExists11 := entity1.Fields["ID"]
+	suite.True(fieldExists11)
+	suite.Equal(entityField11.Type, "Person.ID")
+	suite.Len(entityField11.Attributes, 0)
+
+	entityField12, fieldExists12 := entity1.Fields["FirstName"]
+	suite.True(fieldExists12)
+	suite.Equal(entityField12.Type, "Person.FirstName")
+	suite.Len(entityField12.Attributes, 0)
+
+	entityField13, fieldExists13 := entity1.Fields["LastName"]
+	suite.True(fieldExists13)
+	suite.Equal(entityField13.Type, "Person.LastName")
+	suite.Len(entityField13.Attributes, 0)
+
+	entityField14, fieldExists14 := entity1.Fields["Email"]
+	suite.True(fieldExists14)
+	suite.Equal(entityField14.Type, "Person.ContactInfo.Email")
+	suite.Len(entityField14.Attributes, 0)
+
+	suite.Len(entity1.Related, 1)
+
+	entityRelated10, relatedExists10 := entity1.Related["Company"]
+	suite.True(relatedExists10)
+	suite.Equal(entityRelated10.Type, "ForOne")
+}
+
+func (suite *RegistryTestSuite) TestLoadEntitiesFromDirectory_InvalidDirPath() {
+	registry := dia.GetRegistry()
+
+	entitiesErr := registry.LoadEntitiesFromDirectory("####INVALID/DIR/PATH####")
+
+	suite.NotNil(entitiesErr)
+	entitiesErrMsg := entitiesErr.Error()
+	suite.Contains(entitiesErrMsg, "error reading directory")
+	suite.Contains(entitiesErrMsg, "####INVALID/DIR/PATH####")
+	suite.Len(registry.Models, 0)
+	suite.Len(registry.Entities, 0)
+}
+
+func (suite *RegistryTestSuite) TestLoadEntitiesFromDirectory_ConflictingName() {
+	registry := dia.GetRegistry()
+
+	registry.Entities["Company"] = yaml.Entity{Name: "Company"}
+
+	entitiesErr := registry.LoadEntitiesFromDirectory(suite.EntitiesDirPath)
+
+	suite.NotNil(entitiesErr)
+	entitiesErrMsg := entitiesErr.Error()
+	suite.Contains(entitiesErrMsg, "entity name 'Company' already exists in registry")
+
+	conflictPath := filepath.Join(suite.EntitiesDirPath, "company.ent")
+	suite.Contains(entitiesErrMsg, conflictPath)
+
+	suite.Len(registry.Models, 0)
+	suite.Len(registry.Entities, 1)
 }

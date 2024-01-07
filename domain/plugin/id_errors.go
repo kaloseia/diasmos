@@ -12,6 +12,8 @@ var ErrIDInvalidFieldType = fmt.Errorf("%w 'Type' (expected: %v)", ErrIDInvalidF
 var ErrIDInvalidFieldName = fmt.Errorf("%w 'Name' (expected: %v)", ErrIDInvalidField, reKeyName)
 var ErrIDInvalidFieldVersion = fmt.Errorf("%w 'Version' (expected: %v)", ErrIDInvalidField, reKeyVersion)
 
+var ErrManifestNotFound = errors.New("manifest not found")
+
 func errWrapID(pluginID ID, toWrap error) error {
 	return fmt.Errorf("plugin '%s': %w", pluginID, toWrap)
 }

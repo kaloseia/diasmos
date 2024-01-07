@@ -1,11 +1,13 @@
 package plugin_test
 
 import (
+	"path"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/kaloseia/diasmos/domain/files"
 	"github.com/kaloseia/diasmos/domain/plugin"
 	"github.com/kaloseia/diasmos/domain/testutils"
 )
@@ -70,7 +72,8 @@ func (suite *FileSystemRegistryTestSuite) TestInitialize_PathNotSet() {
 }
 
 func (suite *FileSystemRegistryTestSuite) TestValidatePlugin() {
-	registry, registryErr := plugin.NewFileSystemRegistry(suite.TestDirPath + "/registry/plugins")
+	registryPath := path.Join(suite.TestDirPath, "/registry/plugins")
+	registry, registryErr := plugin.NewFileSystemRegistry(registryPath)
 	suite.Nil(registryErr)
 
 	id := plugin.ID{
@@ -79,12 +82,66 @@ func (suite *FileSystemRegistryTestSuite) TestValidatePlugin() {
 		Type:    plugin.TypeCompile,
 	}
 
-	manifest, initErr := registry.ValidatePlugin(id)
+	manifest, validateErr := registry.ValidatePlugin(id)
 
-	suite.Nil(initErr)
+	suite.Nil(validateErr)
 	suite.Equal(manifest.ID.Name, "go-struct")
 	suite.Equal(manifest.ID.Version, "0.0.0")
 	suite.Equal(manifest.ID.Type, plugin.TypeCompile)
 	suite.Equal(manifest.Author, "John Doe")
 	suite.Equal(manifest.Description, "The go-struct plugin is a compile plugin for transforming Dia structures into basic go structures with the correct fields and data types.")
+}
+
+func (suite *FileSystemRegistryTestSuite) TestValidatePlugin_NotFound_Name() {
+	registryPath := path.Join(suite.TestDirPath, "/registry/plugins")
+	registry, registryErr := plugin.NewFileSystemRegistry(registryPath)
+	suite.Nil(registryErr)
+
+	id := plugin.ID{
+		Name:    "INVALID",
+		Version: "0.0.0",
+		Type:    plugin.TypeCompile,
+	}
+
+	manifest, validateErr := registry.ValidatePlugin(id)
+
+	suite.ErrorContains(validateErr, "compile/INVALID@0.0.0")
+	suite.ErrorContains(validateErr, "manifest not found")
+	suite.Zero(manifest)
+}
+
+func (suite *FileSystemRegistryTestSuite) TestValidatePlugin_NotFound_Version() {
+	registryPath := path.Join(suite.TestDirPath, "/registry/plugins")
+	registry, registryErr := plugin.NewFileSystemRegistry(registryPath)
+	suite.Nil(registryErr)
+
+	id := plugin.ID{
+		Name:    "go-struct",
+		Version: "99999.0.0",
+		Type:    plugin.TypeCompile,
+	}
+
+	manifest, validateErr := registry.ValidatePlugin(id)
+
+	suite.ErrorContains(validateErr, "compile/go-struct@99999.0.0")
+	suite.ErrorContains(validateErr, "manifest not found")
+	suite.Zero(manifest)
+}
+
+func (suite *FileSystemRegistryTestSuite) TestValidatePlugin_NotFound_Type() {
+	registryPath := path.Join(suite.TestDirPath, "/registry/plugins")
+	registry, registryErr := plugin.NewFileSystemRegistry(registryPath)
+	suite.Nil(registryErr)
+
+	id := plugin.ID{
+		Name:    "go-struct",
+		Version: "0.0.0",
+		Type:    plugin.TypeExecution,
+	}
+
+	manifest, validateErr := registry.ValidatePlugin(id)
+
+	suite.ErrorContains(validateErr, "execute/go-struct@0.0.0")
+	suite.ErrorContains(validateErr, "manifest not found")
+	suite.Zero(manifest)
 }

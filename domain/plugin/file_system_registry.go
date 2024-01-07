@@ -2,6 +2,9 @@ package plugin
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
+	"io/fs"
 	"os"
 	"path"
 )
@@ -27,7 +30,7 @@ func (r *FileSystemRegistry) IsInitialized() bool {
 	return r.isInitialized
 }
 
-// ValidatePlugin validates that the prerequisites of a plugin in the registry are given for the plugin's manifest.Prerequisites may be defined as dependencies, versions, and licensing.
+// ValidatePlugin validates that the prerequisites of a plugin in the registry are given for the plugin's manifest. Prerequisites may be defined as dependencies, versions, and licensing.
 //
 // Not to be confused with validating the prerequisites of a plugin in the project during plugin installation.
 func (r *FileSystemRegistry) ValidatePlugin(pluginID ID) (Manifest, error) {
@@ -54,6 +57,9 @@ func (r *FileSystemRegistry) getPluginManifest(pluginID ID) (Manifest, error) {
 		return Manifest{}, pathErr
 	}
 	manifestContents, readErr := os.ReadFile(manifestPath)
+	if readErr != nil && errors.Is(readErr, fs.ErrNotExist) {
+		return Manifest{}, fmt.Errorf("%w: %v", ErrManifestNotFound, readErr)
+	}
 	if readErr != nil {
 		return Manifest{}, readErr
 	}

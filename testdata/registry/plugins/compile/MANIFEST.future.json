@@ -1,0 +1,16 @@
+{
+	"name": "go-gorm",
+	"version": "0.0.0",
+	"type": "compile",
+	"author": "John Doris",
+	"description": "The go-gorm plugin is a compile plugin for transforming Dia structures into gorm-compatible go structures with the correct fields and data types.",
+	"dependencies": {
+		"compile/go-struct": "0.0.0"
+	},
+	"events": {
+		"GormModelCreated": {
+			"inputParams":  [ "dia" ],
+			"outputParams": [ "models/GormModel" ]
+		}
+	}
+}

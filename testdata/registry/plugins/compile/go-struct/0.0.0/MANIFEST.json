@@ -1,0 +1,7 @@
+{
+	"name": "go-struct",
+	"version": "0.0.0",
+	"type": "compile",
+	"author": "John Doe",
+	"description": "The go-struct plugin is a compile plugin for transforming Dia structures into basic go structures with the correct fields and data types."
+}

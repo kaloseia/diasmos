@@ -33,11 +33,10 @@ func (suite *RegistryTestSuite) SetupTest() {
 
 func (suite *RegistryTestSuite) TearDownTest() {
 	suite.TestDirPath = ""
-	dia.ResetRegistry()
 }
 
 func (suite *RegistryTestSuite) TestLoadModelsFromDirectory() {
-	registry := dia.GetRegistry()
+	registry := dia.NewRegistry()
 
 	modelsErr := registry.LoadModelsFromDirectory(suite.ModelsDirPath)
 
@@ -219,7 +218,7 @@ func (suite *RegistryTestSuite) TestLoadModelsFromDirectory() {
 }
 
 func (suite *RegistryTestSuite) TestLoadModelsFromDirectory_InvalidDirPath() {
-	registry := dia.GetRegistry()
+	registry := dia.NewRegistry()
 
 	modelsErr := registry.LoadModelsFromDirectory("####INVALID/DIR/PATH####")
 
@@ -232,7 +231,7 @@ func (suite *RegistryTestSuite) TestLoadModelsFromDirectory_InvalidDirPath() {
 }
 
 func (suite *RegistryTestSuite) TestLoadModelsFromDirectory_ConflictingName() {
-	registry := dia.GetRegistry()
+	registry := dia.NewRegistry()
 
 	registry.Models["Company"] = yaml.Model{Name: "Company"}
 
@@ -250,7 +249,7 @@ func (suite *RegistryTestSuite) TestLoadModelsFromDirectory_ConflictingName() {
 }
 
 func (suite *RegistryTestSuite) TestLoadEntitiesFromDirectory() {
-	registry := dia.GetRegistry()
+	registry := dia.NewRegistry()
 
 	entitiesErr := registry.LoadEntitiesFromDirectory(suite.EntitiesDirPath)
 
@@ -343,7 +342,7 @@ func (suite *RegistryTestSuite) TestLoadEntitiesFromDirectory() {
 }
 
 func (suite *RegistryTestSuite) TestLoadEntitiesFromDirectory_InvalidDirPath() {
-	registry := dia.GetRegistry()
+	registry := dia.NewRegistry()
 
 	entitiesErr := registry.LoadEntitiesFromDirectory("####INVALID/DIR/PATH####")
 
@@ -356,7 +355,7 @@ func (suite *RegistryTestSuite) TestLoadEntitiesFromDirectory_InvalidDirPath() {
 }
 
 func (suite *RegistryTestSuite) TestLoadEntitiesFromDirectory_ConflictingName() {
-	registry := dia.GetRegistry()
+	registry := dia.NewRegistry()
 
 	registry.Entities["Company"] = yaml.Entity{Name: "Company"}
 

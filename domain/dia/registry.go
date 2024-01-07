@@ -3,8 +3,9 @@ package dia
 import (
 	"fmt"
 
-	"github.com/kaloseia/diasmos/domain/dia/yaml"
 	"github.com/kaloseia/diasmos/domain/yamlfile"
+
+	"github.com/kaloseia/diasmos/domain/dia/yaml"
 )
 
 const ModelFileSuffix = ".mod"
